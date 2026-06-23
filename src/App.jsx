@@ -375,7 +375,7 @@ function App() {
                       FAR Multiplier Applied
                     </p>
                     <p className="mt-1 text-2xl font-semibold tracking-tight text-white">
-                      {getProjectBaseFAR(selectedProjectType).toLocaleString(undefined, {
+                    (zoningRules.zoningCodes[selectedProjectType]?.baseFAR || 1.0).toLocaleString(undefined, {
                         minimumFractionDigits: 1,
                         maximumFractionDigits: 1,
                       })}
@@ -389,7 +389,7 @@ function App() {
                     </p>
                     <p className="mt-1 text-3xl font-semibold tracking-tight text-white">
                       {(
-                        areaResult.netFootprintSqFt * getProjectBaseFAR(selectedProjectType)
+                        areaResult.netFootprintSqFt * (zoningRules.zoningCodes[selectedProjectType]?.baseFAR || 1.0)
                       ).toLocaleString(undefined, {
                         maximumFractionDigits: 0,
                       })}{' '}
