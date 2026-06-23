@@ -1,0 +1,20 @@
+{
+  "Commercial High-Rise": {
+    "setbackFrontFeet": 0,
+    "setbackSideFeet": 0,
+    "maxHeightFeet": 120,
+    "farMultiplier": 8.0
+  },
+  "Multi-Family Residential": {
+    "setbackFrontFeet": 15,
+    "setbackSideFeet": 5,
+    "maxHeightFeet": 60,
+    "farMultiplier": 2.0
+  },
+  "Mixed-Use": {
+    "setbackFrontFeet": 10,
+    "setbackSideFeet": 5,
+    "maxHeightFeet": 80,
+    "farMultiplier": 3.0
+  }
+}
