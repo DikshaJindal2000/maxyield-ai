@@ -7,9 +7,35 @@ import { supabase } from './supabaseClient.js'
 import zoningRules from './zoningRules.json'
 
 const SQ_METERS_TO_SQ_FEET = 10.763910416709722
+const FEET_TO_METERS = 0.3048
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_7sY9AUf052iXaJua6teQM00'
 const PENDING_REPORT_KEY = 'maxyield_pending_report'
-const projectTypes = Object.keys(zoningRules)
+const projectTypes = Object.entries(zoningRules.zoningCodes)
+
+function calculateNetFootprintSqFt(polygon, setbacksFt) {
+  const { front, rear, side } = setbacksFt
+  const averageSetbackFt = (front + rear + side * 2) / 4
+  const insetPolygon = turf.buffer(polygon, -averageSetbackFt * FEET_TO_METERS, {
+    units: 'meters',
+  })
+
+  if (!insetPolygon) return 0
+
+  return turf.area(insetPolygon) * SQ_METERS_TO_SQ_FEET
+}
+
+function calculateTrueBuildableArea(polygon, zoningRule) {
+  const rawSquareFeet = turf.area(polygon) * SQ_METERS_TO_SQ_FEET
+  const netFootprintSqFt = calculateNetFootprintSqFt(polygon, zoningRule.setbacks_ft)
+  const trueBuildableArea = netFootprintSqFt * zoningRule.baseFAR
+
+  return {
+    rawSquareFeet,
+    netFootprintSqFt,
+    baseFAR: zoningRule.baseFAR,
+    trueBuildableArea,
+  }
+}
 
 function generateReportPdf(reportProjectType, reportResult) {
   const doc = new jsPDF()
@@ -27,22 +53,29 @@ function generateReportPdf(reportProjectType, reportResult) {
   y += 16
   doc.setFontSize(11)
 
+  const zoningLabel =
+    zoningRules.zoningCodes[reportProjectType]?.description ?? reportProjectType
+
   const reportRows = [
-    ['Project Type', reportProjectType],
+    ['Project Type', zoningLabel],
     [
       'Raw Land Area',
-      `${reportResult.squareFeet.toLocaleString(undefined, { maximumFractionDigits: 0 })} sq ft`,
+      `${reportResult.rawSquareFeet.toLocaleString(undefined, { maximumFractionDigits: 0 })} sq ft`,
     ],
     [
-      'FAR Multiplier',
-      `${reportResult.farMultiplier.toLocaleString(undefined, {
+      'Net Footprint After Setbacks',
+      `${reportResult.netFootprintSqFt.toLocaleString(undefined, { maximumFractionDigits: 0 })} sq ft`,
+    ],
+    [
+      'Base FAR',
+      `${reportResult.baseFAR.toLocaleString(undefined, {
         minimumFractionDigits: 1,
         maximumFractionDigits: 1,
       })}×`,
     ],
     [
-      'Maximum Buildable Envelope',
-      `${reportResult.maxBuildableEnvelope.toLocaleString(undefined, {
+      'True Buildable Area',
+      `${reportResult.trueBuildableArea.toLocaleString(undefined, {
         maximumFractionDigits: 0,
       })} sq ft`,
     ],
@@ -126,17 +159,11 @@ function App() {
     }
 
     const polygon = leafletToTurfPolygon(polygonCoordinates)
-    const squareMeters = turf.area(polygon)
-    const squareFeet = squareMeters * SQ_METERS_TO_SQ_FEET
-    const farMultiplier = zoningRules[projectType].farMultiplier
-    const maxBuildableEnvelope = squareFeet * farMultiplier
+    const zoningRule = zoningRules.zoningCodes[projectType]
+    const result = calculateTrueBuildableArea(polygon, zoningRule)
 
     setAreaError('')
-    setAreaResult({
-      squareFeet,
-      farMultiplier,
-      maxBuildableEnvelope,
-    })
+    setAreaResult(result)
   }
 
   function handleClearMap() {
@@ -244,9 +271,9 @@ function App() {
               <option value="" disabled>
                 Select project type
               </option>
-              {projectTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+              {projectTypes.map(([code, rule]) => (
+                <option key={code} value={code}>
+                  {rule.description}
                 </option>
               ))}
             </select>
@@ -287,7 +314,7 @@ function App() {
                       Raw Land Area
                     </p>
                     <p className="mt-1 text-2xl font-semibold tracking-tight text-white">
-                      {areaResult.squareFeet.toLocaleString(undefined, {
+                      {areaResult.rawSquareFeet.toLocaleString(undefined, {
                         maximumFractionDigits: 0,
                       })}{' '}
                       <span className="text-sm font-medium text-zinc-400">sq ft</span>
@@ -296,10 +323,22 @@ function App() {
 
                   <div className="border-t border-zinc-800 pt-4">
                     <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-                      FAR Multiplier Applied
+                      Net Footprint After Setbacks
                     </p>
                     <p className="mt-1 text-2xl font-semibold tracking-tight text-white">
-                      {areaResult.farMultiplier.toLocaleString(undefined, {
+                      {areaResult.netFootprintSqFt.toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}{' '}
+                      <span className="text-sm font-medium text-zinc-400">sq ft</span>
+                    </p>
+                  </div>
+
+                  <div className="border-t border-zinc-800 pt-4">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                      Base FAR Applied
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold tracking-tight text-white">
+                      {areaResult.baseFAR.toLocaleString(undefined, {
                         minimumFractionDigits: 1,
                         maximumFractionDigits: 1,
                       })}
@@ -309,10 +348,10 @@ function App() {
 
                   <div className="rounded-lg border border-zinc-700/80 bg-zinc-950/60 px-4 py-4">
                     <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-                      Maximum Buildable Envelope
+                      True Buildable Area
                     </p>
                     <p className="mt-1 text-3xl font-semibold tracking-tight text-white">
-                      {areaResult.maxBuildableEnvelope.toLocaleString(undefined, {
+                      {areaResult.trueBuildableArea.toLocaleString(undefined, {
                         maximumFractionDigits: 0,
                       })}{' '}
                       <span className="text-base font-medium text-zinc-400">sq ft</span>

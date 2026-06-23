@@ -1,20 +1,39 @@
 {
-  "Commercial High-Rise": {
-    "setbackFrontFeet": 0,
-    "setbackSideFeet": 0,
-    "maxHeightFeet": 120,
-    "farMultiplier": 8.0
-  },
-  "Multi-Family Residential": {
-    "setbackFrontFeet": 15,
-    "setbackSideFeet": 5,
-    "maxHeightFeet": 60,
-    "farMultiplier": 2.0
-  },
-  "Mixed-Use": {
-    "setbackFrontFeet": 10,
-    "setbackSideFeet": 5,
-    "maxHeightFeet": 80,
-    "farMultiplier": 3.0
+  "city": "Austin, TX",
+  "zoningCodes": {
+    "Commercial_Core_CBD": {
+      "description": "Central Business District",
+      "baseFAR": 8.0,
+      "maxFAR_withBonus": 15.0,
+      "maxHeight_ft": null,
+      "setbacks_ft": {
+        "front": 0,
+        "rear": 0,
+        "side": 0
+      },
+      "imperviousCoverMax": 1.0
+    },
+    "Mixed_Use_MU": {
+      "description": "Mixed Use / Commercial Highway",
+      "baseFAR": 2.0,
+      "maxHeight_ft": 60,
+      "setbacks_ft": {
+        "front": 15,
+        "rear": 10,
+        "side": 5
+      },
+      "imperviousCoverMax": 0.8
+    },
+    "Multi_Family_MF6": {
+      "description": "Highest Density Residential",
+      "baseFAR": 1.0,
+      "maxHeight_ft": 90,
+      "setbacks_ft": {
+        "front": 15,
+        "rear": 15,
+        "side": 10
+      },
+      "imperviousCoverMax": 0.7
+    }
   }
 }
