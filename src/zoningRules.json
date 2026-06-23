@@ -1,7 +1,8 @@
 {
   "city": "Austin, TX",
   "zoningCodes": {
-    "Commercial_Core_CBD": {
+    "Commercial High-Rise": {
+      "code": "Commercial_Core_CBD",
       "description": "Central Business District",
       "baseFAR": 8.0,
       "maxFAR_withBonus": 15.0,
@@ -13,7 +14,8 @@
       },
       "imperviousCoverMax": 1.0
     },
-    "Mixed_Use_MU": {
+    "Mixed-Use": {
+      "code": "Mixed_Use_MU",
       "description": "Mixed Use / Commercial Highway",
       "baseFAR": 2.0,
       "maxHeight_ft": 60,
@@ -24,7 +26,8 @@
       },
       "imperviousCoverMax": 0.8
     },
-    "Multi_Family_MF6": {
+    "Multi-Family Residential": {
+      "code": "Multi_Family_MF6",
       "description": "Highest Density Residential",
       "baseFAR": 1.0,
       "maxHeight_ft": 90,

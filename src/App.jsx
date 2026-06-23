@@ -12,6 +12,16 @@ const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_7sY9AUf052iXaJua6teQM00
 const PENDING_REPORT_KEY = 'maxyield_pending_report'
 const projectTypes = Object.entries(zoningRules.zoningCodes)
 
+const LEGACY_PROJECT_TYPE_MAP = {
+  Multi_Family_MF6: 'Multi-Family Residential',
+  Mixed_Use_MU: 'Mixed-Use',
+  Commercial_Core_CBD: 'Commercial High-Rise',
+}
+
+function resolveProjectType(projectType) {
+  return LEGACY_PROJECT_TYPE_MAP[projectType] ?? projectType
+}
+
 function calculateNetFootprintSqFt(polygon, setbacksFt) {
   const { front, rear, side } = setbacksFt
   const averageSetbackFt = (front + rear + side * 2) / 4
@@ -37,10 +47,17 @@ function calculateTrueBuildableArea(polygon, zoningRule) {
   }
 }
 
-function generateReportPdf(reportProjectType, reportResult) {
+function generateReportPdf(selectedType, reportResult) {
   const doc = new jsPDF()
   const marginX = 20
   let y = 28
+  const resolvedType = resolveProjectType(selectedType)
+  const zoningRule = zoningRules.zoningCodes[resolvedType]
+
+  if (!zoningRule || !reportResult) return
+
+  const baseFAR = zoningRule.baseFAR
+  const trueBuildableArea = reportResult.netFootprintSqFt * baseFAR
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(18)
@@ -53,10 +70,7 @@ function generateReportPdf(reportProjectType, reportResult) {
   y += 16
   doc.setFontSize(11)
 
-  const zoningLabel =
-    zoningRules.zoningCodes[reportProjectType]?.description ?? reportProjectType
-
-  const baseFAR = zoningRules.zoningCodes[reportProjectType]?.baseFAR
+  const zoningLabel = zoningRule.description ?? resolvedType
 
   const reportRows = [
     ['Project Type', zoningLabel],
@@ -69,7 +83,7 @@ function generateReportPdf(reportProjectType, reportResult) {
       `${reportResult.netFootprintSqFt.toLocaleString(undefined, { maximumFractionDigits: 0 })} sq ft`,
     ],
     [
-      'Base FAR',
+      'FAR Multiplier',
       `${baseFAR.toLocaleString(undefined, {
         minimumFractionDigits: 1,
         maximumFractionDigits: 1,
@@ -77,7 +91,7 @@ function generateReportPdf(reportProjectType, reportResult) {
     ],
     [
       'True Buildable Area',
-      `${reportResult.trueBuildableArea.toLocaleString(undefined, {
+      `${trueBuildableArea.toLocaleString(undefined, {
         maximumFractionDigits: 0,
       })} sq ft`,
     ],
@@ -121,7 +135,7 @@ function App() {
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [polygonCoordinates, setPolygonCoordinates] = useState([])
-  const [projectType, setProjectType] = useState('')
+  const [selectedProjectType, setSelectedProjectType] = useState('')
   const [areaResult, setAreaResult] = useState(null)
   const [areaError, setAreaError] = useState('')
 
@@ -148,7 +162,7 @@ function App() {
   }
 
   function handleCalculate() {
-    if (!projectType) {
+    if (!selectedProjectType) {
       setAreaResult(null)
       setAreaError('Select a project type to apply zoning rules.')
       return
@@ -161,7 +175,7 @@ function App() {
     }
 
     const polygon = leafletToTurfPolygon(polygonCoordinates)
-    const zoningRule = zoningRules.zoningCodes[projectType]
+    const zoningRule = zoningRules.zoningCodes[selectedProjectType]
     const result = calculateTrueBuildableArea(polygon, zoningRule)
 
     setAreaError('')
@@ -180,21 +194,26 @@ function App() {
 
   function handleDownloadReport() {
     const pendingReport = getPendingReport()
-    const reportProjectType = projectType || pendingReport?.projectType
+    const selectedType = resolveProjectType(
+      selectedProjectType ||
+        pendingReport?.selectedProjectType ||
+        pendingReport?.projectType,
+    )
     const reportResult = areaResult ?? pendingReport?.areaResult
 
-    if (!reportResult || !reportProjectType) return
+    if (!reportResult || !selectedType) return
+    if (!zoningRules.zoningCodes[selectedType]) return
 
-    generateReportPdf(reportProjectType, reportResult)
+    generateReportPdf(selectedType, reportResult)
     sessionStorage.removeItem(PENDING_REPORT_KEY)
   }
 
   function handleDownloadCheckout() {
-    if (!areaResult || !projectType) return
+    if (!areaResult || !selectedProjectType) return
 
     sessionStorage.setItem(
       PENDING_REPORT_KEY,
-      JSON.stringify({ projectType, areaResult }),
+      JSON.stringify({ selectedProjectType, areaResult }),
     )
     window.location.href = STRIPE_PAYMENT_LINK
   }
@@ -262,9 +281,9 @@ function App() {
             </label>
             <select
               id="project-type"
-              value={projectType}
+              value={selectedProjectType}
               onChange={(event) => {
-                setProjectType(event.target.value)
+                setSelectedProjectType(event.target.value)
                 setAreaResult(null)
                 setAreaError('')
               }}
@@ -273,9 +292,9 @@ function App() {
               <option value="" disabled>
                 Select project type
               </option>
-              {projectTypes.map(([code, rule]) => (
-                <option key={code} value={code}>
-                  {rule.description}
+              {projectTypes.map(([key]) => (
+                <option key={key} value={key}>
+                  {key}
                 </option>
               ))}
             </select>
@@ -337,13 +356,16 @@ function App() {
 
                   <div className="border-t border-zinc-800 pt-4">
                     <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-                      Base FAR Applied
+                      FAR Multiplier Applied
                     </p>
                     <p className="mt-1 text-2xl font-semibold tracking-tight text-white">
-                      {areaResult.baseFAR.toLocaleString(undefined, {
-                        minimumFractionDigits: 1,
-                        maximumFractionDigits: 1,
-                      })}
+                      {zoningRules.zoningCodes[selectedProjectType].baseFAR.toLocaleString(
+                        undefined,
+                        {
+                          minimumFractionDigits: 1,
+                          maximumFractionDigits: 1,
+                        },
+                      )}
                       <span className="text-white">×</span>
                     </p>
                   </div>
@@ -353,7 +375,10 @@ function App() {
                       True Buildable Area
                     </p>
                     <p className="mt-1 text-3xl font-semibold tracking-tight text-white">
-                      {areaResult.trueBuildableArea.toLocaleString(undefined, {
+                      {(
+                        areaResult.netFootprintSqFt *
+                        zoningRules.zoningCodes[selectedProjectType].baseFAR
+                      ).toLocaleString(undefined, {
                         maximumFractionDigits: 0,
                       })}{' '}
                       <span className="text-base font-medium text-zinc-400">sq ft</span>
