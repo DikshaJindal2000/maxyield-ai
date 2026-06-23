@@ -22,6 +22,16 @@ function resolveProjectType(projectType) {
   return LEGACY_PROJECT_TYPE_MAP[projectType] ?? projectType
 }
 
+function getProjectBaseFAR(selectedProjectType) {
+  const resolvedType = resolveProjectType(selectedProjectType)
+  return zoningRules.zoningCodes[resolvedType]?.baseFAR ?? null
+}
+
+function getZoningRule(selectedProjectType) {
+  const resolvedType = resolveProjectType(selectedProjectType)
+  return zoningRules.zoningCodes[resolvedType] ?? null
+}
+
 function calculateNetFootprintSqFt(polygon, setbacksFt) {
   const { front, rear, side } = setbacksFt
   const averageSetbackFt = (front + rear + side * 2) / 4
@@ -34,16 +44,16 @@ function calculateNetFootprintSqFt(polygon, setbacksFt) {
   return turf.area(insetPolygon) * SQ_METERS_TO_SQ_FEET
 }
 
-function calculateTrueBuildableArea(polygon, zoningRule) {
+function calculateParcelMetrics(polygon, selectedProjectType) {
+  const zoningRule = getZoningRule(selectedProjectType)
+  if (!zoningRule) return null
+
   const rawSquareFeet = turf.area(polygon) * SQ_METERS_TO_SQ_FEET
   const netFootprintSqFt = calculateNetFootprintSqFt(polygon, zoningRule.setbacks_ft)
-  const trueBuildableArea = netFootprintSqFt * zoningRule.baseFAR
 
   return {
     rawSquareFeet,
     netFootprintSqFt,
-    baseFAR: zoningRule.baseFAR,
-    trueBuildableArea,
   }
 }
 
@@ -56,8 +66,8 @@ function generateReportPdf(selectedType, reportResult) {
 
   if (!zoningRule || !reportResult) return
 
-  const baseFAR = zoningRule.baseFAR
-  const trueBuildableArea = reportResult.netFootprintSqFt * baseFAR
+  const trueBuildableArea =
+    reportResult.netFootprintSqFt * zoningRules.zoningCodes[resolvedType].baseFAR
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(18)
@@ -84,7 +94,7 @@ function generateReportPdf(selectedType, reportResult) {
     ],
     [
       'FAR Multiplier',
-      `${baseFAR.toLocaleString(undefined, {
+      `${zoningRules.zoningCodes[resolvedType].baseFAR.toLocaleString(undefined, {
         minimumFractionDigits: 1,
         maximumFractionDigits: 1,
       })}×`,
@@ -175,8 +185,13 @@ function App() {
     }
 
     const polygon = leafletToTurfPolygon(polygonCoordinates)
-    const zoningRule = zoningRules.zoningCodes[selectedProjectType]
-    const result = calculateTrueBuildableArea(polygon, zoningRule)
+    const result = calculateParcelMetrics(polygon, selectedProjectType)
+
+    if (!result) {
+      setAreaResult(null)
+      setAreaError('Invalid project type selected.')
+      return
+    }
 
     setAreaError('')
     setAreaResult(result)
@@ -186,6 +201,7 @@ function App() {
     setPolygonCoordinates([])
     setAreaResult(null)
     setAreaError('')
+    sessionStorage.removeItem(PENDING_REPORT_KEY)
   }
 
   async function handleSignOut() {
@@ -323,7 +339,7 @@ function App() {
               </p>
             )}
 
-            {areaResult && (
+            {areaResult && selectedProjectType && (
               <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 px-5 py-5">
                 <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
                   Yield Analysis
@@ -359,13 +375,10 @@ function App() {
                       FAR Multiplier Applied
                     </p>
                     <p className="mt-1 text-2xl font-semibold tracking-tight text-white">
-                      {zoningRules.zoningCodes[selectedProjectType].baseFAR.toLocaleString(
-                        undefined,
-                        {
-                          minimumFractionDigits: 1,
-                          maximumFractionDigits: 1,
-                        },
-                      )}
+                      {getProjectBaseFAR(selectedProjectType).toLocaleString(undefined, {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1,
+                      })}
                       <span className="text-white">×</span>
                     </p>
                   </div>
@@ -376,8 +389,7 @@ function App() {
                     </p>
                     <p className="mt-1 text-3xl font-semibold tracking-tight text-white">
                       {(
-                        areaResult.netFootprintSqFt *
-                        zoningRules.zoningCodes[selectedProjectType].baseFAR
+                        areaResult.netFootprintSqFt * getProjectBaseFAR(selectedProjectType)
                       ).toLocaleString(undefined, {
                         maximumFractionDigits: 0,
                       })}{' '}
