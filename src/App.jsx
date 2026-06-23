@@ -56,6 +56,8 @@ function generateReportPdf(reportProjectType, reportResult) {
   const zoningLabel =
     zoningRules.zoningCodes[reportProjectType]?.description ?? reportProjectType
 
+  const baseFAR = zoningRules.zoningCodes[reportProjectType]?.baseFAR
+
   const reportRows = [
     ['Project Type', zoningLabel],
     [
@@ -68,7 +70,7 @@ function generateReportPdf(reportProjectType, reportResult) {
     ],
     [
       'Base FAR',
-      `${reportResult.baseFAR.toLocaleString(undefined, {
+      `${baseFAR.toLocaleString(undefined, {
         minimumFractionDigits: 1,
         maximumFractionDigits: 1,
       })}×`,
