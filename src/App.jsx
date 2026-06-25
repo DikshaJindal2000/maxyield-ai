@@ -257,40 +257,38 @@ function App() {
     window.location.href = STRIPE_PAYMENT_LINK
   }
 
-  function cacheCheckoutState() {
-    if (polygonCoordinates?.length) {
-      localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates))
-    }
-    if (areaResult) {
-      localStorage.setItem('cached_result', JSON.stringify(areaResult))
-    }
-    if (selectedProjectType) {
-      localStorage.setItem('cached_project_type', selectedProjectType)
-    }
-  }
-
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    if (urlParams.get('success') !== 'true') return
-
     const savedPolygon = localStorage.getItem('cached_polygon')
     const savedResult = localStorage.getItem('cached_result')
-    const savedProjectType = localStorage.getItem('cached_project_type')
+    const savedType = localStorage.getItem('cached_project_type')
 
-    if (savedPolygon && savedResult && savedProjectType) {
-      const parsedPolygon = JSON.parse(savedPolygon)
-      const parsedResult = JSON.parse(savedResult)
+    if (savedPolygon && savedResult && savedType) {
+      try {
+        const parsedPolygon = JSON.parse(savedPolygon)
+        const parsedResult = JSON.parse(savedResult)
+        const parsedType = JSON.parse(savedType)
 
-      setPolygonCoordinates(parsedPolygon)
-      setAreaResult(parsedResult)
-      setSelectedProjectType(savedProjectType)
+        setPolygonCoordinates(parsedPolygon)
+        setAreaResult(parsedResult)
+        setSelectedProjectType(parsedType)
 
-      generateReportPdf(savedProjectType, parsedResult)
+        localStorage.removeItem('cached_polygon')
+        localStorage.removeItem('cached_result')
+        localStorage.removeItem('cached_project_type')
 
-      localStorage.removeItem('cached_polygon')
-      localStorage.removeItem('cached_result')
-      localStorage.removeItem('cached_project_type')
-      window.history.replaceState({}, document.title, window.location.pathname)
+        window.history.replaceState({}, document.title, window.location.pathname)
+
+        setTimeout(() => {
+          if (typeof generateReportPdf === 'function') {
+            generateReportPdf(parsedType, parsedResult, parsedPolygon)
+          } else if (typeof handleDownloadReport === 'function') {
+            handleDownloadReport(parsedType, parsedResult, parsedPolygon)
+          }
+        }, 1500)
+      } catch (e) {
+        console.error('Cache parsing failed', e)
+        localStorage.clear()
+      }
     }
   }, [])
 
@@ -492,12 +490,22 @@ function App() {
             <p className="text-zinc-400 text-sm mb-6">Select a plan to download full spatial analytics, compliance setbacks, and 3D volume outputs.</p>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <button type="button" onClick={() => { cacheCheckoutState(); window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01' }} className="border border-zinc-800 p-4 rounded-lg bg-zinc-950 hover:bg-zinc-800 transition text-left">
+              <button type="button" onClick={() => {
+                localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates))
+                localStorage.setItem('cached_result', JSON.stringify(areaResult))
+                localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType))
+                window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01'
+              }} className="border border-zinc-800 p-4 rounded-lg bg-zinc-950 hover:bg-zinc-800 transition text-left">
                 <div className="font-semibold text-white">Single Token</div>
                 <div className="text-2xl font-bold mt-2 text-white">$49</div>
                 <div className="text-xs text-zinc-500 mt-1">One-time per parcel</div>
               </button>
-              <button type="button" onClick={() => { cacheCheckoutState(); window.location.href = 'https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02' }} className="border border-blue-900 p-4 rounded-lg bg-blue-950/20 hover:bg-blue-950/40 transition text-left border-blue-500/30">
+              <button type="button" onClick={() => {
+                localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates))
+                localStorage.setItem('cached_result', JSON.stringify(areaResult))
+                localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType))
+                window.location.href = 'https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02'
+              }} className="border border-blue-900 p-4 rounded-lg bg-blue-950/20 hover:bg-blue-950/40 transition text-left border-blue-500/30">
                 <div className="font-semibold text-blue-400">Active Fund</div>
                 <div className="text-2xl font-bold mt-2 text-white">$249<span className="text-sm font-normal text-zinc-500">/mo</span></div>
                 <div className="text-xs text-blue-300 mt-1">Unlimited reports</div>
