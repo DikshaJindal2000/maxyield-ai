@@ -1,4 +1,34 @@
-import { useEffect, useState } from 'react'
+import { useEffect(() => {
+  const savedPolygon = localStorage.getItem('cached_polygon');
+  const savedResult = localStorage.getItem('cached_result');
+  const savedType = localStorage.getItem('cached_project_type');
+
+  if (savedPolygon && savedResult && savedType) {
+    const parsedPolygon = JSON.parse(savedPolygon);
+    const parsedResult = JSON.parse(savedResult);
+    const parsedType = JSON.parse(savedType);
+
+    // Rehydrate UI state
+    setPolygonCoordinates(parsedPolygon);
+    setAreaResult(parsedResult);
+    setSelectedProjectType(parsedType);
+
+    // Clean URL and Cache immediately
+    window.history.replaceState({}, document.title, window.location.pathname);
+    localStorage.removeItem('cached_polygon');
+    localStorage.removeItem('cached_result');
+    localStorage.removeItem('cached_project_type');
+
+    // Wait 1.5 seconds, then print
+    setTimeout(() => {
+       if (typeof generateReportPdf === 'function') {
+         generateReportPdf(parsedType, parsedResult, parsedPolygon);
+       } else if (typeof handleDownloadReport === 'function') {
+         handleDownloadReport(parsedType, parsedResult, parsedPolygon);
+       }
+    }, 1500);
+  }
+}, []);, useState } from 'react'
 import { jsPDF } from 'jspdf'
 import * as turf from '@turf/turf'
 import Auth from './components/Auth.jsx'
