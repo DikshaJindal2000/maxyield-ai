@@ -258,34 +258,46 @@ function App() {
   }
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const hasSuccessUrl = urlParams.get('success') === 'true'
-    const savedPolygon = localStorage.getItem('cached_polygon')
-    const savedResult = localStorage.getItem('cached_result')
+    const searchString = window.location?.search || '';
+    const urlParams = new URLSearchParams(searchString);
+    const hasSuccessTag = urlParams ? urlParams.get('success') === 'true' : false;
 
-    if (hasSuccessUrl && savedPolygon && savedResult) {
-      const parsedPolygon = JSON.parse(savedPolygon)
-      const parsedResult = JSON.parse(savedResult)
-      const parsedType = JSON.parse(localStorage.getItem('cached_project_type') || 'null')
+    const savedPolygon = localStorage.getItem('cached_polygon');
+    const savedResult = localStorage.getItem('cached_result');
+    const savedType = localStorage.getItem('cached_project_type');
 
-      setPolygonCoordinates(parsedPolygon)
-      setAreaResult(parsedResult)
-      if (parsedType) setSelectedProjectType(parsedType)
+    if (hasSuccessTag && savedPolygon && savedResult && savedType) {
+      try {
+        const parsedPolygon = JSON.parse(savedPolygon);
+        const parsedResult = JSON.parse(savedResult);
+        const parsedType = JSON.parse(savedType);
 
-      window.history.replaceState({}, document.title, window.location.pathname)
-      localStorage.removeItem('cached_polygon')
-      localStorage.removeItem('cached_result')
-      localStorage.removeItem('cached_project_type')
+        setPolygonCoordinates(parsedPolygon);
+        setAreaResult(parsedResult);
+        setSelectedProjectType(parsedType);
 
-      setTimeout(() => {
-        if (typeof generateReportPdf === 'function') {
-          generateReportPdf(parsedType, parsedResult, parsedPolygon)
-        } else if (typeof handleDownloadReport === 'function') {
-          handleDownloadReport(parsedType, parsedResult, parsedPolygon)
+        localStorage.removeItem('cached_polygon');
+        localStorage.removeItem('cached_result');
+        localStorage.removeItem('cached_project_type');
+        
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
-      }, 1500)
+
+        setTimeout(() => {
+          if (typeof generateReportPdf === 'function') {
+            generateReportPdf(parsedType, parsedResult, parsedPolygon);
+          } else if (typeof handleDownloadReport === 'function') {
+            handleDownloadReport(parsedType, parsedResult, parsedPolygon);
+          }
+        }, 1500);
+
+      } catch (error) {
+        console.error("Cache processing isolated safely:", error);
+        localStorage.clear();
+      }
     }
-  }, [])
+  }, []);
 
   if (authLoading) {
     return (
