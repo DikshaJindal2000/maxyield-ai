@@ -1,34 +1,4 @@
-import { useEffect(() => {
-  const savedPolygon = localStorage.getItem('cached_polygon');
-  const savedResult = localStorage.getItem('cached_result');
-  const savedType = localStorage.getItem('cached_project_type');
-
-  if (savedPolygon && savedResult && savedType) {
-    const parsedPolygon = JSON.parse(savedPolygon);
-    const parsedResult = JSON.parse(savedResult);
-    const parsedType = JSON.parse(savedType);
-
-    // Rehydrate UI state
-    setPolygonCoordinates(parsedPolygon);
-    setAreaResult(parsedResult);
-    setSelectedProjectType(parsedType);
-
-    // Clean URL and Cache immediately
-    window.history.replaceState({}, document.title, window.location.pathname);
-    localStorage.removeItem('cached_polygon');
-    localStorage.removeItem('cached_result');
-    localStorage.removeItem('cached_project_type');
-
-    // Wait 1.5 seconds, then print
-    setTimeout(() => {
-       if (typeof generateReportPdf === 'function') {
-         generateReportPdf(parsedType, parsedResult, parsedPolygon);
-       } else if (typeof handleDownloadReport === 'function') {
-         handleDownloadReport(parsedType, parsedResult, parsedPolygon);
-       }
-    }, 1500);
-  }
-}, []);, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { jsPDF } from 'jspdf'
 import * as turf from '@turf/turf'
 import Auth from './components/Auth.jsx'
@@ -288,37 +258,32 @@ function App() {
   }
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const hasSuccessUrl = urlParams.get('success') === 'true'
     const savedPolygon = localStorage.getItem('cached_polygon')
     const savedResult = localStorage.getItem('cached_result')
-    const savedType = localStorage.getItem('cached_project_type')
 
-    if (savedPolygon && savedResult && savedType) {
-      try {
-        const parsedPolygon = JSON.parse(savedPolygon)
-        const parsedResult = JSON.parse(savedResult)
-        const parsedType = JSON.parse(savedType)
+    if (hasSuccessUrl && savedPolygon && savedResult) {
+      const parsedPolygon = JSON.parse(savedPolygon)
+      const parsedResult = JSON.parse(savedResult)
+      const parsedType = JSON.parse(localStorage.getItem('cached_project_type') || 'null')
 
-        setPolygonCoordinates(parsedPolygon)
-        setAreaResult(parsedResult)
-        setSelectedProjectType(parsedType)
+      setPolygonCoordinates(parsedPolygon)
+      setAreaResult(parsedResult)
+      if (parsedType) setSelectedProjectType(parsedType)
 
-        localStorage.removeItem('cached_polygon')
-        localStorage.removeItem('cached_result')
-        localStorage.removeItem('cached_project_type')
+      window.history.replaceState({}, document.title, window.location.pathname)
+      localStorage.removeItem('cached_polygon')
+      localStorage.removeItem('cached_result')
+      localStorage.removeItem('cached_project_type')
 
-        window.history.replaceState({}, document.title, window.location.pathname)
-
-        setTimeout(() => {
-          if (typeof generateReportPdf === 'function') {
-            generateReportPdf(parsedType, parsedResult, parsedPolygon)
-          } else if (typeof handleDownloadReport === 'function') {
-            handleDownloadReport(parsedType, parsedResult, parsedPolygon)
-          }
-        }, 1500)
-      } catch (e) {
-        console.error('Cache parsing failed', e)
-        localStorage.clear()
-      }
+      setTimeout(() => {
+        if (typeof generateReportPdf === 'function') {
+          generateReportPdf(parsedType, parsedResult, parsedPolygon)
+        } else if (typeof handleDownloadReport === 'function') {
+          handleDownloadReport(parsedType, parsedResult, parsedPolygon)
+        }
+      }, 1500)
     }
   }, [])
 
@@ -521,20 +486,20 @@ function App() {
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <button type="button" onClick={() => {
-                localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates))
-                localStorage.setItem('cached_result', JSON.stringify(areaResult))
-                localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType))
-                window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01'
+                localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
+                localStorage.setItem('cached_result', JSON.stringify(areaResult));
+                localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+                window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01';
               }} className="border border-zinc-800 p-4 rounded-lg bg-zinc-950 hover:bg-zinc-800 transition text-left">
                 <div className="font-semibold text-white">Single Token</div>
                 <div className="text-2xl font-bold mt-2 text-white">$49</div>
                 <div className="text-xs text-zinc-500 mt-1">One-time per parcel</div>
               </button>
               <button type="button" onClick={() => {
-                localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates))
-                localStorage.setItem('cached_result', JSON.stringify(areaResult))
-                localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType))
-                window.location.href = 'https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02'
+                localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
+                localStorage.setItem('cached_result', JSON.stringify(areaResult));
+                localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+                window.location.href = 'https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02';
               }} className="border border-blue-900 p-4 rounded-lg bg-blue-950/20 hover:bg-blue-950/40 transition text-left border-blue-500/30">
                 <div className="font-semibold text-blue-400">Active Fund</div>
                 <div className="text-2xl font-bold mt-2 text-white">$249<span className="text-sm font-normal text-zinc-500">/mo</span></div>
