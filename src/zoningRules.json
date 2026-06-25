@@ -4,7 +4,7 @@
     "Commercial High-Rise": {
       "code": "Commercial_Core_CBD",
       "description": "Central Business District",
-      "baseFAR": .0,
+      "baseFAR": 8.0,
       "maxFAR_withBonus": 15.0,
       "maxHeight_ft": null,
       "setbacks_ft": {
@@ -17,7 +17,7 @@
     "Mixed-Use": {
       "code": "Mixed_Use_MU",
       "description": "Mixed Use / Commercial Highway",
-1      "baseFAR": 1.0
+      "baseFAR": 2.0,
       "maxHeight_ft": 60,
       "setbacks_ft": {
         "front": 15,

@@ -9,8 +9,13 @@ import zoningRules from './zoningRules.json'
 const SQ_METERS_TO_SQ_FEET = 10.763910416709722
 const FEET_TO_METERS = 0.3048
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_7sY9AUf052iXaJua6teQM00'
+const STRIPE_PRICE_TOKEN = 'your_placeholder_token_id'
+const STRIPE_PRICE_LICENSE = 'your_placeholder_license_id'
 const PENDING_REPORT_KEY = 'maxyield_pending_report'
 const projectTypes = Object.entries(zoningRules.zoningCodes)
+
+const LEGAL_DISCLAIMER =
+  'LEGAL DISCLAIMER: MaxYield AI is a high-velocity preliminary massing screener. Outputs are algorithmic estimates based on municipal data and do not replace legally stamped architectural feasibility studies.'
 
 const LEGACY_PROJECT_TYPE_MAP = {
   Multi_Family_MF6: 'Multi-Family Residential',
@@ -115,6 +120,23 @@ function generateReportPdf(selectedType, reportResult) {
     y += 12
   })
 
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const footerMaxWidth = pageWidth - marginX * 2
+  const footerLineHeight = 3.6
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7)
+  doc.setTextColor(120, 120, 120)
+
+  const disclaimerLines = doc.splitTextToSize(LEGAL_DISCLAIMER, footerMaxWidth)
+  const footerBlockHeight = disclaimerLines.length * footerLineHeight
+  const footerStartY = pageHeight - 12 - footerBlockHeight
+
+  disclaimerLines.forEach((line, index) => {
+    doc.text(line, marginX, footerStartY + index * footerLineHeight)
+  })
+
   doc.save('MaxYield_Spatial_Report.pdf')
 }
 
@@ -148,6 +170,7 @@ function App() {
   const [selectedProjectType, setSelectedProjectType] = useState('')
   const [areaResult, setAreaResult] = useState(null)
   const [areaError, setAreaError] = useState('')
+  const [showPricingModal, setShowPricingModal] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -261,8 +284,9 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-zinc-950 text-white">
-      <aside className="flex w-[30%] shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 px-8 py-10">
+    <>
+      <div className="flex h-screen w-screen overflow-hidden bg-zinc-950 pb-16 text-white">
+        <aside className="flex w-[30%] shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 px-8 py-10">
         <header className="mb-10">
           <h1 className="text-2xl font-semibold tracking-tight text-white">
             MaxYield AI
@@ -375,7 +399,7 @@ function App() {
                       FAR Multiplier Applied
                     </p>
                     <p className="mt-1 text-2xl font-semibold tracking-tight text-white">
-                    (zoningRules.zoningCodes[selectedProjectType]?.baseFAR || 1.0).toLocaleString(undefined, {
+                      {getProjectBaseFAR(selectedProjectType).toLocaleString(undefined, {
                         minimumFractionDigits: 1,
                         maximumFractionDigits: 1,
                       })}
@@ -389,7 +413,7 @@ function App() {
                     </p>
                     <p className="mt-1 text-3xl font-semibold tracking-tight text-white">
                       {(
-                        areaResult.netFootprintSqFt * (zoningRules.zoningCodes[selectedProjectType]?.baseFAR || 1.0)
+                        areaResult.netFootprintSqFt * getProjectBaseFAR(selectedProjectType)
                       ).toLocaleString(undefined, {
                         maximumFractionDigits: 0,
                       })}{' '}
@@ -405,7 +429,7 @@ function App() {
         {areaResult && (
           <button
             type="button"
-            onClick={handleDownloadCheckout}
+            onClick={() => setShowPricingModal(true)}
             className="mt-6 w-full rounded-lg border border-zinc-600 bg-zinc-900 py-3.5 text-sm font-bold tracking-wide text-white transition hover:border-zinc-500 hover:bg-zinc-800"
           >
             Download Institutional Report
@@ -436,7 +460,38 @@ function App() {
           </div>
         </div>
       </main>
-    </div>
+      </div>
+
+      {showPricingModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-xl max-w-lg w-full text-white relative">
+            <h3 className="text-xl font-bold mb-2">Unlock Institutional Report</h3>
+            <p className="text-zinc-400 text-sm mb-6">Select a plan to download full spatial analytics, compliance setbacks, and 3D volume outputs.</p>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <button type="button" onClick={() => { window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01' }} className="border border-zinc-800 p-4 rounded-lg bg-zinc-950 hover:bg-zinc-800 transition text-left">
+                <div className="font-semibold text-white">Single Token</div>
+                <div className="text-2xl font-bold mt-2 text-white">$49</div>
+                <div className="text-xs text-zinc-500 mt-1">One-time per parcel</div>
+              </button>
+              <button type="button" onClick={() => { window.location.href = 'https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02' }} className="border border-blue-900 p-4 rounded-lg bg-blue-950/20 hover:bg-blue-950/40 transition text-left border-blue-500/30">
+                <div className="font-semibold text-blue-400">Active Fund</div>
+                <div className="text-2xl font-bold mt-2 text-white">$249<span className="text-sm font-normal text-zinc-500">/mo</span></div>
+                <div className="text-xs text-blue-300 mt-1">Unlimited reports</div>
+              </button>
+            </div>
+
+            <button type="button" onClick={() => setShowPricingModal(false)} className="w-full text-center text-sm text-zinc-500 hover:text-white transition">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <footer className="pointer-events-none fixed inset-x-0 bottom-0 z-50 border-t border-zinc-800/50 bg-zinc-950/90 px-6 py-3 backdrop-blur-sm">
+        <p className="text-xs leading-relaxed text-gray-500 opacity-70">
+          {LEGAL_DISCLAIMER}
+        </p>
+      </footer>
+    </>
   )
 }
 
