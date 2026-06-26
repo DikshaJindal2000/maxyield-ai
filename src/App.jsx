@@ -258,15 +258,11 @@ function App() {
   }
 
   useEffect(() => {
-    const searchString = window.location?.search || '';
-    const urlParams = new URLSearchParams(searchString);
-    const hasSuccessTag = urlParams ? urlParams.get('success') === 'true' : false;
+    const savedPolygon = sessionStorage.getItem('cached_polygon');
+    const savedResult = sessionStorage.getItem('cached_result');
+    const savedType = sessionStorage.getItem('cached_project_type');
 
-    const savedPolygon = localStorage.getItem('cached_polygon');
-    const savedResult = localStorage.getItem('cached_result');
-    const savedType = localStorage.getItem('cached_project_type');
-
-    if (hasSuccessTag && savedPolygon && savedResult && savedType) {
+    if (savedPolygon && savedResult && savedType) {
       try {
         const parsedPolygon = JSON.parse(savedPolygon);
         const parsedResult = JSON.parse(savedResult);
@@ -276,10 +272,10 @@ function App() {
         setAreaResult(parsedResult);
         setSelectedProjectType(parsedType);
 
-        localStorage.removeItem('cached_polygon');
-        localStorage.removeItem('cached_result');
-        localStorage.removeItem('cached_project_type');
-        
+        sessionStorage.removeItem('cached_polygon');
+        sessionStorage.removeItem('cached_result');
+        sessionStorage.removeItem('cached_project_type');
+
         if (window.history && window.history.replaceState) {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -291,11 +287,11 @@ function App() {
             handleDownloadReport(parsedType, parsedResult, parsedPolygon);
           }
         }, 1500);
-
-      } catch (error) {
-        console.error("Cache processing isolated safely:", error);
-        localStorage.clear();
+      } catch (e) {
+        sessionStorage.clear();
       }
+    }
+  }, []);
     }
   }, []);
 
@@ -507,22 +503,30 @@ function App() {
                 <div className="text-2xl font-bold mt-2 text-white">$49</div>
                 <div className="text-xs text-zinc-500 mt-1">One-time per parcel</div>
               </button>
-              <button type="button" onClick={() => {
-                localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
-                localStorage.setItem('cached_result', JSON.stringify(areaResult));
-                localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
-                window.location.href = 'https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02';
-              }} className="border border-blue-900 p-4 rounded-lg bg-blue-950/20 hover:bg-blue-950/40 transition text-left border-blue-500/30">
+              <button type="button" onClick={(e) => {
+  e.preventDefault();
+  sessionStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
+  sessionStorage.setItem('cached_result', JSON.stringify(areaResult));
+  sessionStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+  setTimeout(() => {
+    window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01';
+  }, 1000);
+}} className="border border-blue-900 p-4 rounded-lg bg-blue-950/20 hover:bg-blue-950/40 transition text-left border-blue-500/30">
                 <div className="font-semibold text-blue-400">Active Fund</div>
                 <div className="text-2xl font-bold mt-2 text-white">$249<span className="text-sm font-normal text-zinc-500">/mo</span></div>
                 <div className="text-xs text-blue-300 mt-1">Unlimited reports</div>
               </button>
             </div>
 
-            <button type="button" onClick={() => setShowPricingModal(false)} className="w-full text-center text-sm text-zinc-500 hover:text-white transition">Cancel</button>
-          </div>
-        </div>
-      )}
+            <button type="button" onClick={(e) => {
+  e.preventDefault();
+  sessionStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
+  sessionStorage.setItem('cached_result', JSON.stringify(areaResult));
+  sessionStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+  setTimeout(() => {
+    window.location.href = 'https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02';
+  }, 1000);
+}}
 
       <footer className="pointer-events-none fixed inset-x-0 bottom-0 z-50 border-t border-zinc-800/50 bg-zinc-950/90 px-6 py-3 backdrop-blur-sm">
         <p className="text-xs leading-relaxed text-gray-500 opacity-70">
