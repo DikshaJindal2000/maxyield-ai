@@ -257,7 +257,7 @@ function App() {
     window.location.href = STRIPE_PAYMENT_LINK
   }
 
-  useEffect(() => {
+  (useEffect(() => {
     const savedPolygon = sessionStorage.getItem('cached_polygon');
     const savedResult = sessionStorage.getItem('cached_result');
     const savedType = sessionStorage.getItem('cached_project_type');
@@ -291,9 +291,7 @@ function App() {
         sessionStorage.clear();
       }
     }
-  }, []);
-    }
-  }, []);
+  }, []); 
 
   if (authLoading) {
     return (
