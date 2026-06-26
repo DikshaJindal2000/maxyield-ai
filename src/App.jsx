@@ -493,11 +493,16 @@ function App() {
             <p className="text-zinc-400 text-sm mb-6">Select a plan to download full spatial analytics, compliance setbacks, and 3D volume outputs.</p>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <button type="button" onClick={() => {
-                localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
-                localStorage.setItem('cached_result', JSON.stringify(areaResult));
-                localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
-                window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01';
+            <button type="button" className="border border-zinc-800 p-4 rounded-lg bg-zinc-950 hover:bg-zinc-800 transition text-left border-blue-500/30" onClick={(e) => {
+  e.preventDefault();
+  sessionStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
+  sessionStorage.setItem('cached_result', JSON.stringify(areaResult));
+  sessionStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+  setTimeout(() => {
+    window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01';
+  }, 1000);
+}}>
+                
               }} className="border border-zinc-800 p-4 rounded-lg bg-zinc-950 hover:bg-zinc-800 transition text-left">
                 <div className="font-semibold text-white">Single Token</div>
                 <div className="text-2xl font-bold mt-2 text-white">$49</div>
@@ -505,8 +510,8 @@ function App() {
               </button>
               <button type="button" onClick={(e) => {
   e.preventDefault();
-  sessionStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
-  sessionStorage.setItem('cached_result', JSON.stringify(areaResult));
+    sessionStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
+sessionStorage.setItem('cached_result', JSON.stringify(areaResult));
   sessionStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
   setTimeout(() => {
     window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01';
