@@ -258,12 +258,16 @@ function App() {
   }
 
   (useEffect(() => {
-    // Checks both storage types to ensure it works in strict private/incognito tabs
+    if (authLoading) {
+      console.log("ℹ️ Auth is loading, waiting for UI to mount...");
+      return;
+    }
+
     const savedPolygon = localStorage.getItem('cached_polygon') || sessionStorage.getItem('cached_polygon');
     const savedResult = localStorage.getItem('cached_result') || sessionStorage.getItem('cached_result');
     const savedType = localStorage.getItem('cached_project_type') || sessionStorage.getItem('cached_project_type');
 
-    console.log("🎯 REHYDRATION DIAGNOSTICS:", { savedPolygon, savedResult, savedType });
+    console.log("🎯 REHYDRATION ENGINE: Auth Ready. Checking storage...", { savedPolygon, savedResult, savedType });
 
     if (savedPolygon && savedResult && savedType) {
       try {
@@ -275,38 +279,30 @@ function App() {
         setAreaResult(parsedResult);
         setSelectedProjectType(parsedType);
 
-        // Clear both to keep storage pristine
-        localStorage.removeItem('cached_polygon');
-        localStorage.removeItem('cached_result');
-        localStorage.removeItem('cached_project_type');
-        sessionStorage.removeItem('cached_polygon');
-        sessionStorage.removeItem('cached_result');
-        sessionStorage.removeItem('cached_project_type');
-
-        if (window.history && window.history.replaceState) {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        console.log("⏳ Starting 2-second layout mount countdown...");
         setTimeout(() => {
           console.log("🚀 Executing PDF download engine...");
           if (typeof generateReportPdf === 'function') {
             generateReportPdf(parsedType, parsedResult, parsedPolygon);
           } else if (typeof handleDownloadReport === 'function') {
             handleDownloadReport(parsedType, parsedResult, parsedPolygon);
-          } else {
-            console.error("❌ Critical Error: PDF download functions are missing or out of scope!");
           }
-        }, 2000);
+
+          localStorage.removeItem('cached_polygon');
+          localStorage.removeItem('cached_result');
+          localStorage.removeItem('cached_project_type');
+          sessionStorage.removeItem('cached_polygon');
+          sessionStorage.removeItem('cached_result');
+          sessionStorage.removeItem('cached_project_type');
+
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }, 2500);
       } catch (e) {
         console.error("❌ Rehydration parsing failed:", e);
-        localStorage.clear();
-        sessionStorage.clear();
       }
-    } else {
-      console.log("ℹ️ Storage is empty. Normal user session detected.");
     }
-  }, []);; 
+  }, [authLoading]); 
 
   if (authLoading) {
     return (
@@ -523,9 +519,9 @@ function App() {
               </button>
               <button type="button" onClick={(e) => {
   e.preventDefault();
-  localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
-  localStorage.setItem('cached_result', JSON.stringify(areaResult));
-  localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+    sessionStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
+sessionStorage.setItem('cached_result', JSON.stringify(areaResult));
+  sessionStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
   setTimeout(() => {
     window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01';
   }, 1000);
@@ -538,9 +534,9 @@ function App() {
 
             <button type="button" onClick={(e) => {
   e.preventDefault();
-  localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
-  localStorage.setItem('cached_result', JSON.stringify(areaResult));
-  localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+  sessionStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
+  sessionStorage.setItem('cached_result', JSON.stringify(areaResult));
+  sessionStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
   setTimeout(() => {
     window.location.href = 'https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02';
   }, 1000);
