@@ -258,6 +258,7 @@ function App() {
   }
 
   (useEffect(() => {
+    // 1. Hold execution if the app is still processing the Supabase login state
     if (authLoading) {
       console.log("ℹ️ Auth is loading, waiting for UI to mount...");
       return;
@@ -267,7 +268,7 @@ function App() {
     const savedResult = localStorage.getItem('cached_result') || sessionStorage.getItem('cached_result');
     const savedType = localStorage.getItem('cached_project_type') || sessionStorage.getItem('cached_project_type');
 
-    console.log("🎯 REHYDRATION ENGINE: Auth Ready. Checking storage...", { savedPolygon, savedResult, savedType });
+    console.log("🎯 REHYDRATION ENGINE: Checking storage...", { savedPolygon, savedResult, savedType });
 
     if (savedPolygon && savedResult && savedType) {
       try {
@@ -275,10 +276,12 @@ function App() {
         const parsedResult = JSON.parse(savedResult);
         const parsedType = JSON.parse(savedType);
 
+        // 2. Repopulate the layout states
         setPolygonCoordinates(parsedPolygon);
         setAreaResult(parsedResult);
         setSelectedProjectType(parsedType);
 
+        // 3. Provide a stable 2.5-second rendering window before executing the PDF download
         setTimeout(() => {
           console.log("🚀 Executing PDF download engine...");
           if (typeof generateReportPdf === 'function') {
@@ -287,6 +290,7 @@ function App() {
             handleDownloadReport(parsedType, parsedResult, parsedPolygon);
           }
 
+          // 4. Clean up storage files only after the engine triggers
           localStorage.removeItem('cached_polygon');
           localStorage.removeItem('cached_result');
           localStorage.removeItem('cached_project_type');
@@ -518,13 +522,15 @@ function App() {
                 <div className="text-xs text-zinc-500 mt-1">One-time per parcel</div>
               </button>
               <button type="button" onClick={(e) => {
-  e.preventDefault();
-    sessionStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
-sessionStorage.setItem('cached_result', JSON.stringify(areaResult));
-  sessionStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+  if (e) e.preventDefault();
+  localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
+  localStorage.setItem('cached_result', JSON.stringify(areaResult));
+  localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+  
   setTimeout(() => {
-    window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01';
+    window.location.href = "https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01";
   }, 1000);
+}}
 }} className="border border-blue-900 p-4 rounded-lg bg-blue-950/20 hover:bg-blue-950/40 transition text-left border-blue-500/30">
                 <div className="font-semibold text-blue-400">Active Fund</div>
                 <div className="text-2xl font-bold mt-2 text-white">$249<span className="text-sm font-normal text-zinc-500">/mo</span></div>
@@ -533,12 +539,13 @@ sessionStorage.setItem('cached_result', JSON.stringify(areaResult));
             </div>
 
             <button type="button" onClick={(e) => {
-  e.preventDefault();
-  sessionStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
-  sessionStorage.setItem('cached_result', JSON.stringify(areaResult));
-  sessionStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+  if (e) e.preventDefault();
+  localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
+  localStorage.setItem('cached_result', JSON.stringify(areaResult));
+  localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+  
   setTimeout(() => {
-    window.location.href = 'https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02';
+    window.location.href = "https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02";
   }, 1000);
 }}
 
