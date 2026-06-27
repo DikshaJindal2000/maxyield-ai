@@ -523,13 +523,8 @@ function App() {
               </button>
               <button type="button" onClick={(e) => {
   if (e) e.preventDefault();
-  localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
-  localStorage.setItem('cached_result', JSON.stringify(areaResult));
-  localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
-  
-  setTimeout(() => {
-    window.location.href = "https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01";
-  }, 1000);
+  // Open the Stripe payment window in a completely separate tab
+  window.open("https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01", "_blank");
 }}
 }} className="border border-blue-900 p-4 rounded-lg bg-blue-950/20 hover:bg-blue-950/40 transition text-left border-blue-500/30">
                 <div className="font-semibold text-blue-400">Active Fund</div>
@@ -540,13 +535,8 @@ function App() {
 
             <button type="button" onClick={(e) => {
   if (e) e.preventDefault();
-  localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
-  localStorage.setItem('cached_result', JSON.stringify(areaResult));
-  localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
-  
-  setTimeout(() => {
-    window.location.href = "https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02";
-  }, 1000);
+  // Open the Stripe payment window in a completely separate tab
+  window.open("https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02", "_blank");
 }}
 
       <footer className="pointer-events-none fixed inset-x-0 bottom-0 z-50 border-t border-zinc-800/50 bg-zinc-950/90 px-6 py-3 backdrop-blur-sm">
