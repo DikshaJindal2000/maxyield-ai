@@ -501,43 +501,44 @@ function App() {
 
       {showPricingModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999]">
-          <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-xl max-w-lg w-full text-white relative">
-            <h3 className="text-xl font-bold mb-2">Unlock Institutional Report</h3>
-            <p className="text-zinc-400 text-sm mb-6">Select a plan to download full spatial analytics, compliance setbacks, and 3D volume outputs.</p>
-
-            <div className="grid grid-cols-2 gap-4 mb-6">
-            <button type="button" className="border border-zinc-800 p-4 rounded-lg bg-zinc-950 hover:bg-zinc-800 transition text-left border-blue-500/30" onClick={(e) => {
-  e.preventDefault();
-  sessionStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
-  sessionStorage.setItem('cached_result', JSON.stringify(areaResult));
-  sessionStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
-  setTimeout(() => {
-    window.location.href = 'https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01';
-  }, 1000);
-}}>
-                
-              }} className="border border-zinc-800 p-4 rounded-lg bg-zinc-950 hover:bg-zinc-800 transition text-left">
-                <div className="font-semibold text-white">Single Token</div>
-                <div className="text-2xl font-bold mt-2 text-white">$49</div>
-                <div className="text-xs text-zinc-500 mt-1">One-time per parcel</div>
-              </button>
-              <button type="button" onClick={(e) => {
-  if (e) e.preventDefault();
-  // Open the Stripe payment window in a completely separate tab
-  window.open("https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01", "_blank");
-}}
-}} className="border border-blue-900 p-4 rounded-lg bg-blue-950/20 hover:bg-blue-950/40 transition text-left border-blue-500/30">
-                <div className="font-semibold text-blue-400">Active Fund</div>
-                <div className="text-2xl font-bold mt-2 text-white">$249<span className="text-sm font-normal text-zinc-500">/mo</span></div>
-                <div className="text-xs text-blue-300 mt-1">Unlimited reports</div>
-              </button>
-            </div>
-
-            <button type="button" onClick={(e) => {
-  if (e) e.preventDefault();
-  // Open the Stripe payment window in a completely separate tab
-  window.open("https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02", "_blank");
-}}
+        <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-xl max-w-xl w-full text-white relative">
+          <h3 className="text-xl font-bold mb-2">Unlock Institutional Report</h3>
+          <p className="text-zinc-400 text-sm mb-6">Select a plan to download full spatial analytics, compliance setbacks, and 3D volume outputs.</p>
+          
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            
+            {/* 1. Single Token ($49) Button */}
+            <button 
+              type="button" 
+              className="border border-zinc-800 p-4 rounded-lg bg-zinc-950 hover:bg-zinc-800 transition text-left"
+              onClick={(e) => {
+                if (e) e.preventDefault();
+                window.open("https://buy.stripe.com/test_00wfZif05e1FcRCceBeQM01", "_blank");
+              }}
+            >
+              <div className="font-semibold text-white">Single Token</div>
+              <div className="text-2xl font-bold mt-2 text-white">$49</div>
+              <div className="text-xs text-zinc-500 mt-1">One-time per parcel</div>
+            </button>
+  
+            {/* 2. Active Fund ($249) Button */}
+            <button 
+              type="button" 
+              className="border border-blue-900 p-4 rounded-lg bg-blue-950/20 hover:bg-blue-950/40 transition text-left border-blue-500/30"
+              onClick={(e) => {
+                if (e) e.preventDefault();
+                window.open("https://buy.stripe.com/test_dRm00kg495v9aJufqNeQM02", "_blank");
+              }}
+            >
+              <div className="font-semibold text-blue-400">Active Fund</div>
+              <div className="text-2xl font-bold mt-2 text-white">$249<span className="text-sm font-normal text-zinc-500">/mo</span></div>
+              <div className="text-xs text-blue-300 mt-1">Unlimited reports</div>
+            </button>
+  
+          </div>
+        </div>
+      </div>
+    )}
 
       <footer className="pointer-events-none fixed inset-x-0 bottom-0 z-50 border-t border-zinc-800/50 bg-zinc-950/90 px-6 py-3 backdrop-blur-sm">
         <p className="text-xs leading-relaxed text-gray-500 opacity-70">
