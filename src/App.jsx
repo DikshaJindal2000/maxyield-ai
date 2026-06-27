@@ -256,7 +256,14 @@ function App() {
     )
     window.location.href = STRIPE_PAYMENT_LINK
   }
-
+   // Auto-save state in the background so new tabs can read it seamlessly
+  useEffect(() => {
+    if (polygonCoordinates && areaResult && selectedProjectType) {
+      localStorage.setItem('cached_polygon', JSON.stringify(polygonCoordinates));
+      localStorage.setItem('cached_result', JSON.stringify(areaResult));
+      localStorage.setItem('cached_project_type', JSON.stringify(selectedProjectType));
+    }
+  }, [polygonCoordinates, areaResult, selectedProjectType]);
   (useEffect(() => {
     // 1. Hold execution if the app is still processing the Supabase login state
     if (authLoading) {
